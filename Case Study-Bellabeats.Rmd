@@ -1,0 +1,193 @@
+---
+title: "Bellabeat - Smart Device Usage Data Case Study with R"
+author: "Chisom Emilia Jonathan"
+date: "2024-11-10"
+output: html_document
+---
+
+## About Bellabeat
+
+Bellabeat, a high-tech manufacturer of health-focused products for women.Collecting data on activity, sleep, stress, and reproductive health has allowed Bellabeat to empower women with
+knowledge about their own health and habits. Since it was founded in 2013, Bellabeat has grown rapidly and quickly positioned
+itself as a tech-driven wellness company for women, Bellabeat is a successful small company, but they have the potential to become a larger player in the global smart device market. Urška Sršen, cofounder and Chief Creative Officer of Bellabeat, believes that analyzing smart device fitness data could help unlock new growth opportunities for the company
+
+## Problem Statement
+
+1. What are some trends in smart device usage?
+
+2. How could these trends apply to Bellabeat customers?
+
+3. How could these trends help influence Bellabeat marketing strategy?
+
+
+## Business Task
+
+Identify potential opportunities for growth and recommendations for the Bellabeat marketing strategy improvement based on trends in smart device usage.
+
+
+#### Selecting Input Files
+
+For this project, I will use FitBit Fitness Tracker [Data](https://www.kaggle.com/datasets/arashnic/fitbit)
+
+In my analysis, I will concentrate on daily activity data, weight and sleep data. Daily activity data contains information from many other files, which can be therefore skipped.
+
+## Setting up my environment
+  Notes: setting up my environment by loading the requires libraries:
+  
+```{r}
+library(tidyverse)
+library(lubridate)
+library(dplyr)
+library(ggplot2)
+```
+
+## Importing Dataset
+
+```{r}
+activity <- read.csv("dailyActivity_merged.csv")
+weight <- read.csv("weightLogInfo_merged.csv")
+sleep <- read.csv("sleepDay_merged.csv")
+```
+
+## Preview the dataframes
+```{r}
+head(activity)
+head(weight)
+head(sleep)
+```
+
+* The column for **Date** is named differently ("SleepDay", "ActivityDay" etc.) in all dataframes. A single name, like "Date", should to be used instead for successful merging.
+
+* In weight dataframe, "IsManualReport" column is of type "character", while it would make more sense as "logical"
+
+#### Convert Data types
+
+```{r}
+activity$ActivityDate <- as.Date(activity$ActivityDate, "%m/%d/%Y")
+weight$Date <- as.Date(weight$Date, "%m/%d/%Y")
+sleep$SleepDay <- as.Date(sleep$SleepDay, "%m/%d/%Y")
+
+weight$IsManualReport <- as.logical(weight$IsManualReport)
+```
+
+#### Rename colums
+
+```{r}
+activity <- activity %>%
+  rename(Date = ActivityDate)
+sleep <- sleep %>% 
+  rename(Date = SleepDay)
+```
+
+#### Check for Null 
+
+```{r}
+print("NA values in activity dataframe:")
+sum(is.na(activity))
+print("NA values in weight dataframe:")
+sum(is.na(weight))
+print("NA values in sleep dataframe:")
+sum(is.na(sleep))
+```
+#### Check for Null in Weight dataframe
+
+```{r}
+(is.na(weight))
+```
+The dataframe weight has 65 NA values in Fat column, while total amount of values in this column is 67.
+
+With 97% of empty values, Fat column can not be used for analysis.
+
+## Cleaning Data
+
+```{r}
+head(activity)
+head(weight)
+head(sleep)
+```
+## Analysing Data
+checking for the number of unique users that provided their data
+
+```{r}
+n_distinct(activity$Id)
+n_distinct(weight$Id)
+n_distinct(sleep$Id)
+```
+Getting the summary statistics from the dataframes.
+```{r}
+print("Summary statistics for activity dataframe:")
+summary(activity)
+print("Summary statistics for weight dataframe:")
+summary(weight)
+print("Summary statistics for sleep dataframe:")
+summary(sleep)
+```
+#### Visualization
+
+```{r}
+activity_and_sleep <- merge(x = activity, y = sleep, by = c("Date", "Id"))
+```
+
+```{r}
+ggplot(data = activity_and_sleep) +
+     geom_point(mapping = aes(x = TotalSteps, y = TotalMinutesAsleep), color = 'purple') +
+     geom_smooth(mapping = aes(x = TotalSteps, y = TotalMinutesAsleep), color = 'black') +
+     labs(title="Minutes Asleep and Total Daily Steps") +
+     theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold"))
+```
+
+```{r}
+ggplot(data = activity_and_sleep) +
+     geom_point(mapping = aes(x = TotalSteps, y = Calories), color = 'purple') +
+     geom_smooth(mapping = aes(x = TotalSteps, y = Calories), color = 'black') +
+     labs(title="Calories Intake and Total Daily Steps") +
+     theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold"))
+```
+Merge Activity and Weight dataframe together
+
+```{r}
+activity_and_weight <- merge(x = activity, y = weight, by = c("Date", "Id"))
+```
+```{r}
+ggplot(data = activity_and_weight) +
+     geom_point(mapping = aes(x = Calories, y = WeightKg), color = 'purple') +
+     geom_smooth(mapping = aes(x = Calories, y = WeightKg), color = 'black') +
+     labs(title="Calories Intake and Weight") +
+     theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold"))
+```
+```{r}
+ggplot(data = activity_and_weight) +
+     geom_point(mapping = aes(x = Calories, y = BMI), color = 'blue') +
+     geom_smooth(mapping = aes(x = Calories, y = BMI), color = 'black') +
+     labs(title="Calories Intake and BMI") +
+     theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold"))
+```
+```{r}
+ggplot(data = activity_and_weight) +
+     geom_point(mapping = aes(x = TotalDistance, y = WeightKg), color = 'purple') +
+     geom_smooth(mapping = aes(x = TotalDistance, y = WeightKg), color = 'black') +
+     labs(title="Total Distance and Weight") +
+     theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold"))
+```
+```{r}
+ggplot(data = activity_and_weight) +
+     geom_point(mapping = aes(x = TotalDistance, y = BMI), color = 'blue') +
+     geom_smooth(mapping = aes(x = TotalDistance, y = BMI), color = 'black') +
+     labs(title="Total Distance and BMI") +
+     theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold"))
+```
+##Insight and Recommendtion
+  1. Bellabeat can suggest some ideas for low-calorie lunch and dinner.
+  2. Bellabeat should consider using app notifications to go to bed.
+  3. Bellabeat can use this time to remind and motivate users to go for a run     or walk.
+
+
+
+Thank You!
+
+
+
+
+
+
+
